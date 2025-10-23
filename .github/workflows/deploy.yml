@@ -36,25 +36,32 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # 6. Deploy na VPS via SSH (Usa VPS_HOST e VPS_USERNAME)
+      # 🔑 NOVO PASSO DE SEGURANÇA: Adiciona a chave pública do host (Permite a verificação de identidade)
+      - name: Add SSH Known Hosts
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      # 6. Deploy na VPS via SSH (Agora que as chaves estão no lugar, a conexão funciona)
       - name: Deploy via SSH
         env:
           HOST: ${{ secrets.VPS_HOST }}
           USER: ${{ secrets.VPS_USERNAME }}
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
         run: |
+          # Certifique-se de que os comandos 'rsync' e 'ssh' AQUI
+          # NÃO contêm mais a opção insegura '-o StrictHostKeyChecking=no'
+
           # Sincroniza o docker-compose.yml e o .env com a VPS
-          ssh $USER@$HOST "mkdir -p ~/projeto-evolution-bot"
           rsync -avz --delete \
                 --exclude 'bot/' \
-                -e "ssh -o StrictHostKeyChecking=no" \
+                -e "ssh" \
                 docker-compose.yml .env ./ $USER@$HOST:~/projeto-evolution-bot/
 
           # Executa os Comandos Docker Compose na VPS
           ssh $USER@$HOST "
             cd ~/projeto-evolution-bot && \
-            # Puxa a nova imagem do Bot (buildada e pushada acima)
             docker pull $DOCKER_USER/evolution-bot:latest && \
-            # Re-cria os serviços para rodar a nova imagem
             docker-compose up -d --force-recreate
           "
