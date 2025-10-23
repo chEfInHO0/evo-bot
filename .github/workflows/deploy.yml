@@ -37,10 +37,17 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       # 🔑 NOVO PASSO DE SEGURANÇA: Adiciona a chave pública do host (Permite a verificação de identidade)
-      - name: Add SSH Known Hosts
+      - name: Add SSH Known Hosts Securely
+        env:
+          HOST: ${{ secrets.VPS_HOST }}
         run: |
+          # 1. Cria a pasta .ssh se ela não existir
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+
+          # 2. Usa ssh-keyscan para gerar e injetar a chave do host no known_hosts
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+
+          # 3. Define as permissões corretas
           chmod 600 ~/.ssh/known_hosts
 
       # 6. Deploy na VPS via SSH (Agora que as chaves estão no lugar, a conexão funciona)
