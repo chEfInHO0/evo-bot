@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout do código
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -60,10 +59,9 @@ jobs:
             # 3. Dá permissão de execução
             sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
             
-            # 4. (Opcional, mas útil) Cria um link simbólico para a sintaxe legada (docker-compose)
-            # Isso ajuda a garantir que 'docker compose' e 'docker-compose' funcionem
-            # É opcional se você usar apenas a sintaxe moderna no deploy, mas é uma boa prática
-            sudo ln -s /usr/local/lib/docker/cli-plugins/docker-compose /usr/bin/docker-compose
+            # 4. Cria um link simbólico, IGNORANDO ERROS se o arquivo já existir
+            # Usa o operador '|| true' para que a falha do ln não interrompa o script.
+            sudo ln -s /usr/local/lib/docker/cli-plugins/docker-compose /usr/bin/docker-compose || true
           "
 
       - name: Deploy via SSH
