@@ -57,18 +57,23 @@ jobs:
           USER: ${{ secrets.VPS_USERNAME }}
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          # Certifique-se de que os comandos 'rsync' e 'ssh' AQUI
-          # NÃO contêm mais a opção insegura '-o StrictHostKeyChecking=no'
+          # Certifique-se de que a pasta na VPS existe
+          ssh $USER@$HOST "mkdir -p ~/projeto-evolution-bot"
 
-          # Sincroniza o docker-compose.yml e o .env com a VPS
+          # Sincroniza SOMENTE o docker-compose.yaml (e outros arquivos estáticos como README)
+          # O .env é EXCLUÍDO e PRESERVADO na VPS.
           rsync -avz --delete \
                 --exclude 'bot/' \
                 -e "ssh" \
-                docker-compose.yml .env ./ $USER@$HOST:~/projeto-evolution-bot/
+                docker-compose.yaml ./ $USER@$HOST:~/projeto-evolution-bot/
 
           # Executa os Comandos Docker Compose na VPS
           ssh $USER@$HOST "
             cd ~/projeto-evolution-bot && \
+            
+            # Puxa a nova imagem do Bot
             docker pull $DOCKER_USER/evolution-bot:latest && \
+            
+            # Re-cria os serviços. O docker-compose encontrará o .env existente.
             docker-compose up -d --force-recreate
           "
