@@ -75,7 +75,7 @@ jobs:
 
           # Sincroniza SOMENTE o docker-compose.yaml (e outros arquivos estáticos como README)
           # O .env é EXCLUÍDO e PRESERVADO na VPS.
-          rsync -avz --delete \
+          rsync -avz  \
                 --exclude 'bot/' \
                 -e "ssh" \
                 docker-compose.yaml ./ $USER@$HOST:~/projeto-evolution-bot/
