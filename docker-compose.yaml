@@ -1,0 +1,87 @@
+version: "3.9"
+
+services:
+  # ---------------------------------
+  # 1. SERVIÇO POSTGRESQL (Banco de Dados)
+  # ---------------------------------
+  evo_postgres:
+    container_name: evo_postgres
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      # Essas variáveis são lidas do seu arquivo .env
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      # Persiste os dados do banco de dados
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - evolution_network
+
+  # ---------------------------------
+  # 2. SERVIÇO EVOLUTION API
+  # ---------------------------------
+  evolution-api:
+    container_name: evolution_api
+    image: atendai/evolution-api:latest
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      # Persiste os arquivos e sessões da Evolution API
+      - evolution_instances:/evolution/instances
+    networks:
+      - evolution_network
+    depends_on:
+      # Garante que o PostgreSQL inicie antes da API
+      - evo_postgres
+    environment:
+      # O host DEVE ser o nome do serviço no docker-compose
+      CACHE_REDIS_URI: redis://evo_redis:6379/6
+      REDIS_HOST: evo_redis
+      REDIS_PORT: 6379
+      CONFIG_SESSION_PHONE_VERSION: 2.3000.1028820630
+  # ---------------------------------
+  # 3. SERVIÇO REDIS
+  # ---------------------------------
+  evo_redis:
+    container_name: evo_redis
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data # Persistência
+    networks:
+      - evolution_network
+  # ... (Serviços existentes: evo_postgres, evolution-api, evo_redis)
+
+  # ----------------------------------------------------
+  # NOVO SERVIÇO: BOT DE MENSAGENS PYTHON
+  # ----------------------------------------------------
+  bot:
+    container_name: bot
+    # Constroi a imagem a partir do Dockerfile na pasta 'bot_mensagens'
+    image: luccaselias/evolution-bot:latest
+    restart: always
+    env_file:
+      - .env # Passa as mesmas variáveis do .env
+    networks:
+      - evolution_network # Usa a mesma rede da Evolution API!
+    depends_on:
+      - evolution-api # Garante que a API esteja rodando antes de iniciar o bot
+    # Se você quiser monitorar o agendamento, pode expor a porta de logs (opcional)
+    ports:
+      - "9000:9000"
+# ---------------------------------
+# REDES E VOLUMES
+# ---------------------------------
+networks:
+  evolution_network:
+    driver: bridge # Cria uma rede interna para comunicação
+
+volumes:
+  postgres_data:
+  evolution_instances:
+  redis_data:
