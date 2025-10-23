@@ -14,29 +14,23 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Login no Docker Hub (Usa DOCKER_USERNAME e DOCKER_PASSWORD/PAT)
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 3. Build da imagem do Bot com a tag completa
       - name: Build Bot Image Locally
-        # Usa o nome de usuário do Docker Hub do secret para taguear
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/evolution-bot:latest ./bot
 
-      # 4. Push da imagem do Bot para o Docker Hub
       - name: Push Bot Image to Docker Hub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/evolution-bot:latest
 
-      # 5. Configurar a Chave SSH na Action (Usa SSH_PRIVATE_KEY)
       - name: Configure SSH Key
         uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # 🔑 NOVO PASSO DE SEGURANÇA: Adiciona a chave pública do host (Permite a verificação de identidade)
       - name: Add SSH Known Hosts Securely
         env:
           HOST: ${{ secrets.VPS_HOST }}
@@ -50,7 +44,28 @@ jobs:
           # 3. Define as permissões corretas
           chmod 600 ~/.ssh/known_hosts
 
-      # 6. Deploy na VPS via SSH (Agora que as chaves estão no lugar, a conexão funciona)
+      - name: Install Docker Compose Plugin on VPS
+        env:
+          HOST: ${{ secrets.VPS_HOST }}
+          USER: ${{ secrets.VPS_USERNAME }}
+        run: |
+          # Comandos executados na VPS para instalar o Docker Compose v2 (plugin)
+          ssh $USER@$HOST "
+            # 1. Garante que o diretório de plugins do Docker CLI existe
+            sudo mkdir -p /usr/local/lib/docker/cli-plugins/
+            
+            # 2. Baixa a versão estável do plugin 'compose'
+            sudo curl -SL https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+            
+            # 3. Dá permissão de execução
+            sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+            
+            # 4. (Opcional, mas útil) Cria um link simbólico para a sintaxe legada (docker-compose)
+            # Isso ajuda a garantir que 'docker compose' e 'docker-compose' funcionem
+            # É opcional se você usar apenas a sintaxe moderna no deploy, mas é uma boa prática
+            sudo ln -s /usr/local/lib/docker/cli-plugins/docker-compose /usr/bin/docker-compose
+          "
+
       - name: Deploy via SSH
         env:
           HOST: ${{ secrets.VPS_HOST }}
