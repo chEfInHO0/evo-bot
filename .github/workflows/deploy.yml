@@ -76,26 +76,55 @@ jobs:
           HOST: ${{ secrets.VPS_HOST }}
           USER: ${{ secrets.VPS_USERNAME }}
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+
+          # Carrega os Secrets da aplicação no ambiente do passo 'run'
+          AUTH_API_KEY: ${{ secrets.BOT_AUTH_API_KEY }}
+          ALERT_NUMBER: ${{ secrets.BOT_ALERT_NUMBER }}
+          TARGET_NUMBER: ${{ secrets.BOT_TARGET_NUMBER }}
+          SESSION_NAME: ${{ secrets.BOT_SESSION_NAME }}
+
+          PG_USER: ${{ secrets.POSTGRES_USER_REAL }}
+          PG_PASS: ${{ secrets.POSTGRES_PASS_REAL }}
+          PG_DB: ${{ secrets.POSTGRES_DB_REAL }}
+
         run: |
           # Garante que a pasta de destino na VPS exista
           ssh $USER@$HOST "mkdir -p ~/projeto-evolution-bot"
 
-          # Sincroniza SOMENTE o docker-compose.yaml (corrigido de .yml para .yaml)
-          # O arquivo .env é PRESERVADO na VPS pois a flag --delete foi removida.
+          # 1. Sincroniza o docker-compose.yaml e o .env.example
+          # O .env.example é enviado para referência, mas o .env real será criado abaixo.
           rsync -avz \
                 --exclude 'bot/' \
                 -e "ssh" \
-                docker-compose.yaml ./ $USER@$HOST:~/projeto-evolution-bot/
+                docker-compose.yaml .env.example ./ $USER@$HOST:~/projeto-evolution-bot/
 
-          # Executa os Comandos Docker Compose na VPS
+          # 2. Executa os Comandos Docker Compose na VPS
           ssh $USER@$HOST "
             # Navega para o diretório do projeto
             cd ~/projeto-evolution-bot && \
             
-            # Puxa a nova imagem do Bot (atualizando para o que foi feito push)
+            # --- CRIAÇÃO SEGURA DO ARQUIVO .ENV NA VPS ---
+            # Usa 'echo' para construir o arquivo .env, injetando os valores dos Secrets
+            echo '
+          # Variáveis de Ambiente Injetadas pelo GitHub Actions
+          AUTHENTICATION_API_KEY=\"$AUTH_API_KEY\"
+          SERVER_URL=http://evolution-api:8080 
+          ALERT_NUMBER=\"$ALERT_NUMBER\"
+          TARGET_NUMBER=\"$TARGET_NUMBER\"
+          SESSION_NAME=\"$SESSION_NAME\"
+
+          DATABASE_ENABLED=true 
+          DATABASE_PROVIDER=postgresql 
+
+          POSTGRES_USER=$PG_USER
+          POSTGRES_PASSWORD=$PG_PASS
+          POSTGRES_DB=$PG_DB
+          DATABASE_CONNECTION_URI=postgresql://${PG_USER}:${PG_PASS}@evo_postgres:5432/${PG_DB}
+          ' > .env
+            
+            # 3. Puxa a nova imagem do Bot
             docker pull $DOCKER_USER/evolution-bot:latest && \
             
-            # Re-cria os serviços com a nova imagem. 
-            # O .env é carregado localmente na VPS, e a instância é criada/atualizada.
+            # 4. Re-cria os serviços. O docker-compose agora encontra o .env criado acima.
             docker compose up -d --force-recreate
           "
