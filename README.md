@@ -112,7 +112,7 @@ docker-compose up -d --build
 Acompanhe o que o bot está fazendo em tempo real:
 
 ```bash
-docker logs bot -f
+docker logs evolution_api -f
 ```
 
 ---
