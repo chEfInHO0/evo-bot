@@ -62,7 +62,7 @@ def enviar_mensagem(numero, texto):
         response = requests.post(url, headers=HEADERS,
                                  data=json.dumps(data), timeout=10)
 
-        if response.status_code == 200:
+        if response.status_code == 200 or response.status_code == 201:
             print(
                 f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✅ Mensagem enviada para {numero}")
         else:
