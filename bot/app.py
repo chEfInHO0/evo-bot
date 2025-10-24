@@ -13,6 +13,7 @@ load_dotenv()
 API_URL = environ.get("SERVER_URL")  # Ex: http://localhost:8080
 SESSION = environ.get("SESSION_NAME")  # Ex: BOT
 TOKEN = environ.get("AUTHENTICATION_API_KEY")  # Sua chave de autenticação
+ALERT_NUMBER = environ.get("ALERT_NUMBER")
 
 MOR = [
     "meu amor ❤",
@@ -40,7 +41,7 @@ HEADERS = {
 # 2. CONFIGURAÇÕES DO LEMBRETE
 # ----------------------------------------------------------------------------------
 # !!! IMPORTANTE: SUBSTITUA PELO NÚMERO CORRETO (55DDD9XXXXXXXX)
-NUMERO_NAMORADA = "5519997377735"
+NUMERO_NAMORADA = environ.get("TARGET_NUMBER")
 # ----------------------------------------------------------------------------------
 
 
@@ -116,7 +117,7 @@ schedule.every().day.at("22:00").do(lembrete_noite)
 
 schedule.every().day.at("22:55").do(lembrete_remedio)
 
-enviar_mensagem("19999798809", "Bot iniciando")
+enviar_mensagem(ALERT_NUMBER, "Bot iniciando")
 
 # 5. LOOP PRINCIPAL
 while True:
