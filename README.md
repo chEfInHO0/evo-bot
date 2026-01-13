@@ -1,37 +1,39 @@
+[🇧🇷 Versão em Português](./README.pt-BR.md)
+
 # 🤖 Evolution API Scheduler Bot
 
 [![GitHub Actions Status](https://github.com/chEfInHO0/evo-bot/actions/workflows/deploy.yml/badge.svg)](https://github.com/chEfInHO0/evo-bot/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Feito com Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
+[![Built with Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 
-## 🚀 Visão Geral do Projeto
+## 🚀 Project Overview
 
-Este projeto é uma solução completa e robusta para a **automação de envio de mensagens agendadas via WhatsApp**, utilizando a Evolution API (Baileys) orquestrada com Docker Compose.
+This project is a complete and robust solution for **automating scheduled WhatsApp message delivery**, using the Evolution API (Baileys) orchestrated with Docker Compose.
 
-Desenvolvido para fins de portfólio, demonstra competência na integração de microsserviços, gerenciamento de ambientes, programação assíncrona com agendamento (`schedule`) e práticas de CI/CD (GitHub Actions) para deploy contínuo.
+Developed as a portfolio project, it demonstrates strong skills in microservice integration, environment management, asynchronous programming with scheduling (`schedule`), and CI/CD practices (GitHub Actions) for continuous deployment.
 
-### 🎯 Habilidades Demonstradas
+### 🎯 Demonstrated Skills
 
-- **Docker & Docker Compose:** Orquestração de 4 serviços (`evolution-api`, `PostgreSQL`, `Redis`, `Python Bot`) em uma rede interna.
-- **Comunicação entre Containers:** Uso de nomes de serviço (`http://evolution-api:8080`) para comunicação segura e eficiente dentro da rede Docker.
-- **Automação e Agendamento:** Desenvolvimento de um bot em Python que executa tarefas agendadas em horários específicos, garantindo a entrega de lembretes.
-- **CI/CD (GitHub Actions):** Configuração de um pipeline para _build_ automático da imagem Docker do Bot e deploy via SSH no servidor remoto.
-- **Tratamento de Fuso Horário:** Configuração do `Dockerfile` para garantir que o agendamento no container utilize o fuso horário correto (`America/Sao_Paulo`).
+- **Docker & Docker Compose:** Orchestration of 4 services (`evolution-api`, `PostgreSQL`, `Redis`, `Python Bot`) within an internal network.
+- **Inter-Container Communication:** Using service names (`http://evolution-api:8080`) for secure and efficient communication within Docker.
+- **Automation & Scheduling:** A Python bot that executes scheduled tasks at specific times, ensuring timely message delivery.
+- **CI/CD (GitHub Actions):** Automated pipeline for building the bot's Docker image and deploying it via SSH to a remote server.
+- **Timezone Handling:** Configured `Dockerfile` to ensure container scheduling uses the correct timezone (`America/Sao_Paulo`).
 
 ---
 
-## 🛠️ Stack Tecnológica
+## 🛠️ Tech Stack
 
-- **Orquestração:** Docker & Docker Compose (v3.9)
-- **API de Mensageria:** Evolution API (`atendai/evolution-api:latest`)
-- **Bot:** Python (com as bibliotecas `requests`, `schedule` e `python-dotenv`)
-- **Banco de Dados:** PostgreSQL (Persistência da Evolution API)
-- **Cache:** Redis (Cache da Evolution API)
+- **Orchestration:** Docker & Docker Compose (v3.9)  
+- **Messaging API:** Evolution API (`atendai/evolution-api:latest`)  
+- **Bot:** Python (`requests`, `schedule`, and `python-dotenv`)  
+- **Database:** PostgreSQL (Evolution API persistence)  
+- **Cache:** Redis (Evolution API cache)  
 - **Deploy:** GitHub Actions (CI/CD)
 
 ---
 
-## 📂 Estrutura do Projeto
+## 📂 Project Structure
 
 ```
 
@@ -48,42 +50,41 @@ Desenvolvido para fins de portfólio, demonstra competência na integração de 
 └── workflows/
 └── deploy.yml
 
-```
+````
 
 ---
 
-## ⚙️ Configuração e Instalação Local
+## ⚙️ Local Setup & Installation
 
-Para rodar o projeto localmente:
+To run this project locally:
 
-### 1. Pré-requisitos
+### 1. Prerequisites
 
-- Docker e Docker Compose instalados.
+- Docker and Docker Compose installed.
 
-### 2. Configurar o Arquivo `.env`
+### 2. Configure the `.env` File
 
-Crie o arquivo `.env` na raiz do projeto com as suas credenciais. O ponto mais crítico é a URL interna e as chaves de segurança:
+Create an `.env` file in the project root with your credentials.  
+The most critical values are the internal API URL and authentication keys.
 
 ```env
 # --- Evolution API ---
 
-# Chave de autenticação global. MUDE ESTE VALOR.
+# Global authentication key. CHANGE THIS VALUE.
 # Auth API Key
-AUTHENTICATION_API_KEY="CHAVE_DA_API_YOUR_API_KEY"  # personal recommendation -> openssl rand -hex 32
+AUTHENTICATION_API_KEY="YOUR_API_KEY"  # recommended -> openssl rand -hex 32
 
-# URL do servidor (opcional para teste local, deixa ele ai, confia)
-# Server URL (opcional for localhost, but dont remove it, trust me)
+# Server URL (optional for local testing, keep it here anyway)
 SERVER_URL=http://evolution-api:8080
 
-ALERT_NUMBER= "" # (55DDD9XXXXXXXX) will receive a message when the bot starts
-TARGET_NUMBER="" # (55DDD9XXXXXXXX) will receive the messages from schedule
+ALERT_NUMBER=""  # (55DDD9XXXXXXXX) will receive a message when the bot starts
+TARGET_NUMBER="" # (55DDD9XXXXXXXX) will receive the scheduled messages
 
-SESSION_NAME="NOME_DA_SESSAO_NO_EVO_SESSION_NAME_ON_EVO"
+SESSION_NAME="YOUR_SESSION_NAME_ON_EVO"
 
 # --- Database ---
 DATABASE_ENABLED=true
-
-DATABASE_PROVIDER=SUA_BD_YOUR_DB # postgresql
+DATABASE_PROVIDER=postgresql
 
 POSTGRES_USER=POSTGRES_USER
 POSTGRES_PASSWORD=POSTGRES_PASSWORD
@@ -91,25 +92,25 @@ POSTGRES_DB=POSTGRES_DB
 
 # postgresql://<user>:<password>@<service_name>:<port>/<db_name>
 DATABASE_CONNECTION_URI=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@evo_postgres:5432/${POSTGRES_DB} # evo_postgres (docker container)
-```
+````
 
-### 3\. Executar o Stack Docker
+### 3. Run the Docker Stack
 
-Suba todos os serviços, forçando a reconstrução do Bot para garantir o fuso horário correto:
+Start all services, forcing a rebuild to ensure timezone configuration is applied:
 
 ```bash
 docker-compose up -d --build
 ```
 
-### 4\. Conectar a Instância
+### 4. Connect the Instance
 
-1.  Acesse a Evolution API no seu navegador: `http://localhost:8080/manager/`.
-2.  Escaneie o QR Code com o WhatsApp no seu celular.
-3.  Quando o status estiver `Connected`, o bot estará pronto para enviar as mensagens agendadas.
+1. Open the Evolution API manager in your browser: `http://localhost:8080/manager/`
+2. Scan the QR Code with your WhatsApp mobile app.
+3. Once the status shows `Connected`, the bot will be ready to send scheduled messages.
 
-### 5\. Monitorar os Logs
+### 5. Monitor Logs
 
-Acompanhe o que o bot está fazendo em tempo real:
+Watch bot activity in real time:
 
 ```bash
 docker logs evolution_api -f
@@ -117,26 +118,24 @@ docker logs evolution_api -f
 
 ---
 
-## ☁️ Pipeline de Deploy (GitHub Actions)
+## ☁️ Deployment Pipeline (GitHub Actions)
 
-O deploy para um servidor remoto (VPS) é gerenciado automaticamente pelo GitHub Actions.
+Deployment to a remote server (VPS) is managed automatically via GitHub Actions.
 
-O pipeline realiza os seguintes passos em cada `push` para a branch `main`:
+The pipeline performs the following steps on each `push` to the `main` branch:
 
-1.  **Build & Push:** Constrói a imagem Docker do Bot e a envia para o Docker Hub (ou Container Registry).
-2.  **Acesso SSH:** Usa a `SSH_PRIVATE_KEY` (configurada como Secret) para estabelecer uma conexão segura com a VPS.
-3.  **Sincronização:** Envia o `docker-compose.yml` (ajustado para puxar a imagem do Hub) e o `.env` para o diretório de destino.
-4.  **Execução Remota:** Executa `docker-compose up -d --force-recreate` na VPS, garantindo que o novo código do Bot seja rapidamente implantado.
+1. **Build & Push:** Builds the bot’s Docker image and pushes it to Docker Hub (or another container registry).
+2. **SSH Access:** Uses `SSH_PRIVATE_KEY` (stored as a Secret) to securely connect to the VPS.
+3. **Sync:** Uploads the updated `docker-compose.yml` (configured to pull the image from the registry) and `.env` to the target directory.
+4. **Remote Execution:** Runs `docker-compose up -d --force-recreate` on the VPS to redeploy the updated bot image seamlessly.
 
-> **Nota:** As credenciais da VPS e do Docker Hub são gerenciadas com segurança usando **GitHub Secrets**.
+> **Note:** VPS and Docker Hub credentials are securely managed using **GitHub Secrets**.
 
 ---
 
-## 👤 Autor
+## 👤 Author
 
 **Luccas Elias de Almeida dos Santos**
 
-- [[LinkedIn](https://www.linkedin.com/in/luccas-santos-3a86b31a6/)]
-- [[GitHub](https://github.com/chEfInHO0)]
-
-<!-- end list -->
+* [LinkedIn](https://www.linkedin.com/in/luccas-santos-3a86b31a6/)
+* [GitHub](https://github.com/chEfInHO0)
