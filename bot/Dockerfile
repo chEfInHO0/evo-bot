@@ -11,4 +11,4 @@ RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # -----------------------------------
 
 COPY . .
-CMD ["python", "app.py"]
+CMD ["python3", "app.py"]
