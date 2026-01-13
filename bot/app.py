@@ -66,7 +66,7 @@ print("-" * 50)
 
 schedule.every().day.at("07:00").do(reminder, "07:00")
 
-schedule.every().day.at("10:55").do(reminder, "09:55")
+schedule.every().day.at("09:55").do(reminder, "09:55")
 
 schedule.every().day.at("13:53").do(reminder, "13:30")
 
